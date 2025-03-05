@@ -1,10 +1,10 @@
-const chromium = require('chrome-aws-lambda');
+const chromium = require("@sparticuz/chromium");
 const puppeteer = require('puppeteer-core');
 
-exports.handler = async (event, context) => {
+exports.handler = async function(event, context) {
   // CORS headers
   const headers = {
-    'Access-Control-Allow-Origin': '*', // Allow all origins
+    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   };
@@ -21,7 +21,7 @@ exports.handler = async (event, context) => {
   const url = event.queryStringParameters.url;
   const width = parseInt(event.queryStringParameters.width) || 1280;
   const height = parseInt(event.queryStringParameters.height) || 720;
-  
+
   if (!url) {
     return {
       statusCode: 400,
@@ -34,14 +34,20 @@ exports.handler = async (event, context) => {
   try {
     browser = await puppeteer.launch({
       args: chromium.args,
-      defaultViewport: null,
-      executablePath: await chromium.executablePath,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
       headless: chromium.headless,
     });
 
     const page = await browser.newPage();
+    
     await page.setViewport({ width, height });
-    await page.goto(url, { waitUntil: 'networkidle0' });
+    
+    await page.goto(url, { 
+      waitUntil: 'networkidle0',
+      timeout: 25000 // 25 seconds timeout
+    });
+
     const screenshot = await page.screenshot({ 
       encoding: 'base64',
       fullPage: false
@@ -60,7 +66,10 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Failed to capture screenshot' })
+      body: JSON.stringify({ 
+        error: 'Failed to capture screenshot', 
+        details: error.message 
+      })
     };
   } finally {
     if (browser !== null) {
