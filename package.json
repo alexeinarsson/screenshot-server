@@ -1,0 +1,20 @@
+{
+  "name": "netlify-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "netlify-lambda build functions"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@netlify/functions": "^3.0.1",
+    "chrome-aws-lambda": "^10.1.0",
+    "express": "^4.21.2",
+    "puppeteer-core": "^24.3.1",
+    "serverless-http": "^3.2.0"
+  }
+}
