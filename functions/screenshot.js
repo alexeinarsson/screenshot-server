@@ -2,6 +2,22 @@ const chromium = require('chrome-aws-lambda');
 const puppeteer = require('puppeteer-core');
 
 exports.handler = async (event, context) => {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*', // Allow all origins
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  };
+
+  // Handle OPTIONS request for CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
   const url = event.queryStringParameters.url;
   const width = parseInt(event.queryStringParameters.width) || 1280;
   const height = parseInt(event.queryStringParameters.height) || 720;
@@ -9,6 +25,7 @@ exports.handler = async (event, context) => {
   if (!url) {
     return {
       statusCode: 400,
+      headers,
       body: JSON.stringify({ error: 'URL parameter is required' })
     };
   }
@@ -23,27 +40,26 @@ exports.handler = async (event, context) => {
     });
 
     const page = await browser.newPage();
-    
-    // Set the viewport size
     await page.setViewport({ width, height });
-    
-    // Navigate to the page and wait for it to load
     await page.goto(url, { waitUntil: 'networkidle0' });
-    
-    // Take the screenshot
     const screenshot = await page.screenshot({ 
       encoding: 'base64',
-      fullPage: false // This ensures we only capture the viewport
+      fullPage: false
     });
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ image: `data:image/png;base64,${screenshot}` }),
-      headers: { 'Content-Type': 'application/json' }
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ image: `data:image/png;base64,${screenshot}` })
     };
   } catch (error) {
+    console.error('Screenshot error:', error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: 'Failed to capture screenshot' })
     };
   } finally {
