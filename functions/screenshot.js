@@ -34,15 +34,12 @@ exports.handler = async function(event, context) {
   try {
     browser = await puppeteer.launch({
       args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
+      defaultViewport: { width, height },
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
     });
 
     const page = await browser.newPage();
-    
-    await page.setViewport({ width, height });
-    
     await page.goto(url, { 
       waitUntil: 'networkidle0',
       timeout: 25000 // 25 seconds timeout
