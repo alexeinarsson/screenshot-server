@@ -74,3 +74,6 @@ exports.handler = async function(event, context) {
     }
   }
 };
+
+// Add this line to indicate the server is running
+console.log('Screenshot server is running and ready to accept requests.');
