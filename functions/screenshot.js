@@ -2,6 +2,7 @@ const chromium = require("@sparticuz/chromium");
 const puppeteer = require('puppeteer-core');
 
 let browser = null;
+let isBrowserReady = false;
 
 // Initialize the browser once
 (async () => {
@@ -12,6 +13,7 @@ let browser = null;
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
     });
+    isBrowserReady = true; // Set the flag to true when the browser is ready
     console.log('Browser initialized successfully.');
   } catch (error) {
     console.error('Failed to initialize browser:', error);
@@ -36,7 +38,7 @@ exports.handler = async function(event, context) {
   }
 
   // Check if the browser is initialized
-  if (!browser) {
+  if (!isBrowserReady) {
     return {
       statusCode: 500,
       headers,
