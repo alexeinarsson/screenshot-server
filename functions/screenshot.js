@@ -65,7 +65,8 @@ exports.handler = async function(event, context) {
       headers,
       body: JSON.stringify({ 
         error: 'Failed to capture screenshot', 
-        details: error.message 
+        details: error.message,
+        event: event
       })
     };
   } finally {
