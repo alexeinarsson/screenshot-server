@@ -5,12 +5,17 @@ let browser = null;
 
 // Initialize the browser once
 (async () => {
-  browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: null, // Use default viewport
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-  });
+  try {
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: null, // Use default viewport
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
+    console.log('Browser initialized successfully.');
+  } catch (error) {
+    console.error('Failed to initialize browser:', error);
+  }
 })();
 
 exports.handler = async function(event, context) {
@@ -30,6 +35,15 @@ exports.handler = async function(event, context) {
     };
   }
 
+  // Check if the browser is initialized
+  if (!browser) {
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Browser is not initialized' })
+    };
+  }
+
   const url = event.queryStringParameters.url;
   const width = parseInt(event.queryStringParameters.width) || 1280;
   const height = parseInt(event.queryStringParameters.height) || 720;
@@ -43,6 +57,7 @@ exports.handler = async function(event, context) {
   }
 
   try {
+    browser.defaultViewport = { width, height };
     const page = await browser.newPage();
     await page.goto(url, { 
       waitUntil: 'networkidle0',
