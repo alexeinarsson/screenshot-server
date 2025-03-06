@@ -1,6 +1,18 @@
 const chromium = require("@sparticuz/chromium");
 const puppeteer = require('puppeteer-core');
 
+let browser = null;
+
+// Initialize the browser once
+(async () => {
+  browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: null, // Use default viewport
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  });
+})();
+
 exports.handler = async function(event, context) {
   // CORS headers
   const headers = {
@@ -30,15 +42,7 @@ exports.handler = async function(event, context) {
     };
   }
 
-  let browser = null;
   try {
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: { width, height },
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-    });
-
     const page = await browser.newPage();
     await page.goto(url, { 
       waitUntil: 'networkidle0',
@@ -49,6 +53,8 @@ exports.handler = async function(event, context) {
       encoding: 'base64',
       fullPage: false
     });
+
+    await page.close(); // Close the page after taking the screenshot
 
     return {
       statusCode: 200,
@@ -69,12 +75,15 @@ exports.handler = async function(event, context) {
         event: event
       })
     };
-  } finally {
-    if (browser !== null) {
-      await browser.close();
-    }
   }
 };
 
 // Add this line to indicate the server is running
 console.log('Screenshot server is running and ready to accept requests.');
+
+// Close the browser when the server shuts down (optional)
+process.on('exit', async () => {
+  if (browser) {
+    await browser.close();
+  }
+});
